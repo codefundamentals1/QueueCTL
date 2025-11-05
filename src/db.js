@@ -148,9 +148,10 @@ export function scheduleRetry(job, errorMessage) {
   } else {
     db.prepare(
       `UPDATE jobs
-       SET state='dead', attempts=?, last_error=?, locked_by=NULL, updated_at=?
-       WHERE id=?`
+      SET state='dead', attempts=?, last_error=?, locked_by=NULL, updated_at=?
+      WHERE id=?`
     ).run(attempts, errorMessage, now, job.id);
+    console.log(`maximum attempt ${job.max_retries} reached for job ${job.id} pushed to dead_queue..`)
   }
 }
 
@@ -198,7 +199,7 @@ export const getJob = (id) =>
 export const dlqList = (limit = 50) =>
   db
     .prepare(
-      'SELECT * FROM jobs WHERE state="dead" ORDER BY updated_at DESC LIMIT ?'
+      "SELECT * FROM jobs WHERE state='dead' ORDER BY updated_at DESC LIMIT ?"
     )
     .all(limit);
 

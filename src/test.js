@@ -8,16 +8,16 @@ function run(cmd) {
 
 async function main() {
   console.log('🏁 Enqueuing 20 test jobs...');
-  for (let i = 1; i <= 6; i++) {
+  for (let i = 1; i <= 10; i++) {
     if(i%2 == 0)
-    run(`node src/cli.js enqueue "echo job-${i}"`);
+    run(`node src/cli.js enqueue "echo job-${i} && sleep 1"`);
   else     
-      run(`node src/cli.js enqueue "bash -c 'echo job-${i} && sleep 1'"`);
+      run(`node src/cli.js enqueue "bash -c 'echo job-${i} && sleep 2'"`);
 
   }
 
   console.log('🚀 Starting 3 workers for 10s...');
-  const worker = spawn('node', ['src/cli.js', 'worker', 'start', '--count', '3'], { stdio: 'inherit' });
+  const worker = spawn('node', ['src/cli.js', 'worker-start', '--count', '3'], { stdio: 'inherit' });
   await new Promise(r => setTimeout(r, 10000));
   worker.kill('SIGINT');
 

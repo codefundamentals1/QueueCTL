@@ -54,18 +54,32 @@ program
   });
 
 //
-// WORKER START
+// worker start
 //
+import { fork } from "child_process";
+
 program
-  .command("worker start")
-  .description("Start one or more workers")
+  .command("worker-start")
+  .description("Start one or more worker processes")
   .option("--count <n>", "Number of workers", "1")
   .action(async (opts) => {
     const count = Number(opts.count || 1);
-    console.log(`🚀 Starting ${count} worker(s)...`);
-    const promises = [];
-    for (let i = 0; i < count; i++) promises.push(startWorker({}));
-    await Promise.all(promises); // runs indefinitely
+    console.log(`🚀 Launching ${count} separate worker processes...`);
+
+    const workers = [];
+    for (let i = 0; i < count; i++) {
+      const worker = fork("./src/worker_entry.js", [], {
+        stdio: "inherit",
+      });
+      workers.push(worker);
+    }
+
+    // Handle graceful shutdown
+    process.on("SIGINT", () => {
+      console.log("🛑 Stopping workers...");
+      workers.forEach((w) => w.kill("SIGINT"));
+      process.exit(0);
+    });
   });
 
 //
