@@ -1,0 +1,21 @@
+{
+  "name": "queuectl",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": {
+    "queuectl": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node src/test.js",
+    "queuectl": "node src/cli.js",
+    "worker": "node src/cli.js worker start --count 1",
+    "status": "node src/test.js status"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "loader": "^2.1.1",
+    "nanoid": "^5.0.7"
+  }
+}
