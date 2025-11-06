@@ -7,7 +7,7 @@ function run(cmd) {
 }
 
 async function main() {
-  console.log('🏁 Enqueuing 20 test jobs...');
+  console.log('Enqueuing 50 test jobs...');
   for (let i = 1; i <= 50; i++) {
     if(i%2 == 0)
     run(`node src/cli.js enqueue "echo job-${i} && sleep 1"`);

@@ -37,8 +37,9 @@ export async function startWorker({ heartbeatMs = 2000 }) {
 
     const { ok, exitCode, output } = await runCommand(job.command);
     if (ok) {
-        console.log("job completed : ",job.id , job.output )
       completeJob(job.id, output, exitCode);
+      console.log("job completed : ",job.id)
+      console.log("output is: ",output || "<no output>");
     } else {
       // update last_exit_code for visibility prior to reschedule
       job.last_exit_code = exitCode;

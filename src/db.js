@@ -331,9 +331,9 @@ export function killAllWorkers() {
     if (w.pid) {
       try {
         process.kill(w.pid, "SIGTERM");
-        console.log(`💀 //////Terminated worker PID ${w.pid}`);
+        console.log(`//////Terminated worker PID ${w.pid}`);
       } catch (err) {
-        console.warn(`⚠️ Could not kill PID ${w.pid} (already stopped?)`);
+        console.warn(`Could not kill PID ${w.pid} (already stopped?)`);
       }
     }
   }
