@@ -10,7 +10,8 @@ import {
   dlqRetry,
   getJob,
   workersCleanup,
-  killAllWorkers
+  killAllWorkers,
+  recoverStuckJobs
 } from "./db.js";
 import { startWorker } from "./worker.js";
 import { nanoid } from "./utils.js";
