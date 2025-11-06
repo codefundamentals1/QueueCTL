@@ -6,8 +6,6 @@ import { isoNow, nowMs } from "./utils.js";
 import fsy from "fs";
 import pathfs from "path";
 
-
-
 // Ensure DB folder exists
 const DB_PATH = process.env.DB_PATH || "./db/queue.db";
 const ensureDir = (p) => {
@@ -94,9 +92,6 @@ export function insertJob({ id, command, max_retries, backoff_base }) {
   });
 }
 
-
-
-
 // Atomically claim the next pending job for a worker
 export const claimNext = (workerId) => {
   // console.log("checking for the next job")
@@ -123,7 +118,7 @@ export const claimNext = (workerId) => {
       WHERE id=?
     `
     ).run(workerId, isoNow(), job.id);
-    console.log(`job started ${job.id} is handling by worker:  ${workerId}`)
+    console.log(`job started ${job.id} is handling by worker:  ${workerId}`);
     return job;
   });
 
@@ -132,8 +127,8 @@ export const claimNext = (workerId) => {
 
 // Complete a job
 export function completeJob(id, output, exitCode) {
-  console.log("job completed mesg from db " , id)
-   db.prepare(
+  console.log("job completed mesg from db ", id);
+  db.prepare(
     `UPDATE jobs
      SET state='completed', output=?, last_exit_code=?, locked_by=NULL, updated_at=?
      WHERE id=?`
@@ -159,7 +154,9 @@ export function scheduleRetry(job, errorMessage) {
       SET state='dead', attempts=?, last_error=?, locked_by=NULL, updated_at=?
       WHERE id=?`
     ).run(attempts, errorMessage, now, job.id);
-    console.log(`maximum attempt ${job.max_retries} reached for job ${job.id} pushed to dead_queue..`)
+    console.log(
+      `maximum attempt ${job.max_retries} reached for job ${job.id} pushed to dead_queue..`
+    );
   }
 }
 //recover stucked jobs
@@ -170,9 +167,9 @@ export function recoverStuckJobs(maxAgeMs = 15000, maxJobRuntimeMs = 60000) {
   const jobRuntimeCutoff = new Date(now - maxJobRuntimeMs).toISOString(); // long job runtime threshold
   let totalUpdated = 0;
 
-  console.log("🔍 Checking for long-running or orphaned jobs...");
+  console.log("Checking for long-running or orphaned jobs...");
 
-  // 1️⃣ Find all jobs still processing and older than runtime threshold
+  //  Find all jobs still processing and older than runtime threshold
   const longRunningJobs = db
     .prepare(
       `SELECT * FROM jobs 
@@ -182,42 +179,46 @@ export function recoverStuckJobs(maxAgeMs = 15000, maxJobRuntimeMs = 60000) {
     .all(jobRuntimeCutoff);
 
   if (longRunningJobs.length === 0) {
-    console.log("✅ No long-running jobs detected.");
+    console.log("No long-running jobs detected.");
     return 0;
   }
 
-  console.log(`⚠️ Found ${longRunningJobs.length} jobs running > ${maxJobRuntimeMs / 1000}s.`);
+  console.log(
+    ` Found ${longRunningJobs.length} jobs running > ${
+      maxJobRuntimeMs / 1000
+    }s.`
+  );
 
-  // 2️⃣ Fetch current worker heartbeats
   const allWorkers = db.prepare(`SELECT id, last_heartbeat FROM workers`).all();
 
-  // 3️⃣ Identify jobs whose worker is dead/stale
+  // identify jobs whose worker is dead/stale
   const deadJobs = [];
   const nowISO = new Date().toISOString();
 
   for (const job of longRunningJobs) {
     const worker = allWorkers.find((w) => w.id === job.locked_by);
     if (!worker || worker.last_heartbeat < cutoff) {
-      // worker missing or stale → job is orphaned
       deadJobs.push(job);
     }
   }
 
   if (deadJobs.length === 0) {
-    console.log("🟢 All long jobs belong to active workers.");
+    console.log(" All long jobs belong to active workers.");
     return 0;
   }
 
-  console.log(`❌ ${deadJobs.length} job(s) are orphaned (worker dead or stale).`);
+  console.log(
+    ` ${deadJobs.length} job(s) are orphaned (worker dead or stale).`
+  );
 
-  // 4️⃣ Write them to a JSON log file for audit
+  //  log file for audit
   const logDir = "./logs";
   if (!fsy.existsSync(logDir)) fsy.mkdirSync(logDir, { recursive: true });
   const logPathfs = pathfs.join(logDir, `failed_jobs_${Date.now()}.json`);
   fsy.writeFileSync(logPathfs, JSON.stringify(deadJobs, null, 2));
-  console.log(`📝 Saved failed job details to ${logPathfs}`);
+  console.log(`Saved failed job details to ${logPathfs}`);
 
-  // 5️⃣ Mark those jobs as failed
+  // Mark  jobs as failed
   const ids = deadJobs.map((j) => `'${j.id}'`).join(",");
   const res = db
     .prepare(
@@ -232,13 +233,14 @@ export function recoverStuckJobs(maxAgeMs = 15000, maxJobRuntimeMs = 60000) {
 
   totalUpdated += res.changes;
 
-  // 6️⃣ Optionally clean up dead workers
-  const removed = db.prepare(`DELETE FROM workers WHERE last_heartbeat < ?`).run(cutoff);
+  const removed = db
+    .prepare(`DELETE FROM workers WHERE last_heartbeat < ?`)
+    .run(cutoff);
   if (removed.changes > 0) {
-    console.log(`🧹 Removed ${removed.changes} stale worker record(s).`);
+    console.log(`Removed ${removed.changes} stale worker record(s).`);
   }
 
-  console.log(`✅ Marked ${totalUpdated} stuck job(s) as failed.`);
+  console.log(`Marked ${totalUpdated} stuck job(s) as failed.`);
   return totalUpdated;
 }
 
@@ -292,7 +294,7 @@ export const dlqList = (limit = 50) =>
 
 export const dlqRetry = (id) => {
   const job = getJob(id);
-  // if (!job || job.state !== "dead") throw new Error("Job not in DLQ");
+  if (!job || job.state !== "dead") throw new Error("Job not in DLQ");
   db.prepare(
     `UPDATE jobs
      SET state='pending', attempts=0, locked_by=NULL, last_error=NULL, run_at=?, updated_at=?
@@ -300,37 +302,36 @@ export const dlqRetry = (id) => {
   ).run(nowMs(), isoNow(), id);
 };
 
-
-
-export const workersCleanup = (opts)=>{
-    const maxAge = Number(opts.maxAge);   
-     const cutoff = new Date(Date.now() - maxAge).toISOString();
-    const removed = db.prepare(`DELETE FROM workers WHERE last_heartbeat < ?`).run(cutoff);
-    return removed;
-}
+export const workersCleanup = (opts) => {
+  const maxAge = Number(opts.maxAge);
+  const cutoff = new Date(Date.now() - maxAge).toISOString();
+  const removed = db
+    .prepare(`DELETE FROM workers WHERE last_heartbeat < ?`)
+    .run(cutoff);
+  return removed;
+};
 
 export function listAllWorkers() {
   const workers = db.prepare("SELECT * FROM workers").all();
-  console.log("👷 Active workers:", workers.length);
-  workers.forEach(w => console.log(`- ${w.id} (pid: ${w.pid})`));
+  console.log("Active workers:", workers.length);
+  workers.forEach((w) => console.log(`- ${w.id} (pid: ${w.pid})`));
   return workers;
 }
 export function killAllWorkers() {
   const all = db.prepare("SELECT id, pid FROM workers").all();
-  
+
   if (all.length === 0) {
-    console.log("🟢 No workers found in database.");
+    console.log("No workers found in database.");
     return 0;
   }
 
-  console.log(`⚠️ Found ${all.length} worker(s). Attempting to remove...`);
+  console.log(`Found ${all.length} worker(s). Attempting to remove...`);
 
-  // Optional: Try to kill actual OS processes if still alive
   for (const w of all) {
     if (w.pid) {
       try {
         process.kill(w.pid, "SIGTERM");
-        console.log(`💀 Terminated worker PID ${w.pid}`);
+        console.log(`💀 //////Terminated worker PID ${w.pid}`);
       } catch (err) {
         console.warn(`⚠️ Could not kill PID ${w.pid} (already stopped?)`);
       }
@@ -339,7 +340,7 @@ export function killAllWorkers() {
 
   // Remove from DB
   const result = db.prepare("DELETE FROM workers").run();
-  console.log(`🧹 Removed ${result.changes} worker record(s) from DB.`);
-
+  console.log(` Removed ${result.changes} worker record(s) from DB.`);
+  console.log("\n");
   return result.changes;
 }

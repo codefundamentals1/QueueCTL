@@ -20,7 +20,7 @@ async function main() {
   }
 
   console.log('🚀 Starting 3 workers for 10s...');
-  const worker = spawn('node', ['src/cli.js', 'worker-start', '--count', '10'], { stdio: 'inherit' });
+  const worker = spawn('node', ['src/cli.js', 'worker-start', '--count', '5'], { stdio: 'inherit' });
   await new Promise(r => setTimeout(r, 100000));
   worker.kill('SIGINT');
 

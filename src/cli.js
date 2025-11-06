@@ -1,5 +1,4 @@
-#!/usr/bin/env node
-// src/cli.js
+
 import "dotenv/config";
 import { Command } from "commander";
 import {
@@ -79,7 +78,7 @@ program
 
     // Handle graceful shutdown
     process.on("SIGINT", () => {
-      console.log("🛑 Stopping workers...");
+      console.log("Stopping workers...");
       workers.forEach((w) => w.kill("SIGINT"));
       process.exit(0);
     });
@@ -132,7 +131,7 @@ dlq
   .argument("<id>")
   .action((id) => {
     dlqRetry(id);
-    console.log(`♻️ Retried job from DLQ: ${id}`);
+    console.log(`Retried job from DLQ: ${id}`);
   });
 
 //
@@ -171,7 +170,7 @@ program
   .action((id) => {
     const job = getJob(id);
     if (!job) {
-      console.error("❌ Job not found");
+      console.error(" Job not found");
       process.exitCode = 1;
       return;
     }
@@ -186,9 +185,9 @@ program
     const maxAge = Number(opts.maxAge || 15000);
     const recovered = recoverStuckJobs(maxAge);
     if (recovered > 0) {
-      console.log(`🩺 Recovered ${recovered} stuck job(s) from dead workers.`);
+      console.log(`Recovered ${recovered} stuck job(s) from dead workers.`);
     } else {
-      console.log("✅ No stuck jobs found — all workers healthy!");
+      console.log("No stuck jobs found — all workers healthy!");
     }
   });
 //clearn up worker
@@ -199,9 +198,9 @@ program
   .action((opts) => {
     const removed = workersCleanup(opts)
     if (removed.changes > 0) {
-      console.log(`🧹 Removed ${removed.changes} stale worker(s)`);
+      console.log(`Removed ${removed.changes} stale worker(s)`);
     } else {
-      console.log("✅ No stale workers found");
+      console.log("No stale workers found");
     }
   });
 
