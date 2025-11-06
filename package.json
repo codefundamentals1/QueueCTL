@@ -9,7 +9,8 @@
     "test": "node src/test.js",
     "queuectl": "node src/cli.js",
     "worker": "node src/cli.js worker start --count 1",
-    "status": "node src/test.js status"
+    "status": "node src/test.js status",
+    "monitor": "node src/monitor.js"
   },
   "dependencies": {
     "better-sqlite3": "^9.4.0",

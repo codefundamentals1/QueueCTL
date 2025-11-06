@@ -12,10 +12,10 @@ async function main() {
     if(i%2 == 0)
     run(`node src/cli.js enqueue "echo job-${i} && sleep 1"`);
   else if(i%5 == 0) // job with error , to eventually to be in dead state
-        run(`node src/cli.js enqueue " job-${i}  sleep 1"`);
+        run(`node src/cli.js enqueue " job-${i}  sledkfep 1"`);
 
   else     
-      run(`node src/cli.js enqueue "bash -c 'echo job-${i} && sleep 2'"`);
+      run(`node src/cli.js enqueue "bash -c 'echo job-${i}' && sleep 2"`);
 
   }
 

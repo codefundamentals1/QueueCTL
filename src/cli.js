@@ -9,6 +9,8 @@ import {
   dlqList,
   dlqRetry,
   getJob,
+  workersCleanup,
+  killAllWorkers
 } from "./db.js";
 import { startWorker } from "./worker.js";
 import { nanoid } from "./utils.js";
@@ -188,6 +190,32 @@ program
       console.log("✅ No stuck jobs found — all workers healthy!");
     }
   });
+//clearn up worker
+program
+  .command("worker-cleanup")
+  .description("Remove stale workers that stopped heartbeating")
+  .option("--max-age <ms>", "Staleness threshold in milliseconds", "15000")
+  .action((opts) => {
+    const removed = workersCleanup(opts)
+    if (removed.changes > 0) {
+      console.log(`🧹 Removed ${removed.changes} stale worker(s)`);
+    } else {
+      console.log("✅ No stale workers found");
+    }
+  });
 
+program
+.command("stop-workers")
+.description("stop all workers")
+.action(()=>{
+  const list = killAllWorkers();
+  if(list.length == 0) console.log("no active workers found")
+    else {
+
+  console.log('active foundd');
+  
+  }
+}
+);
 
 await program.parseAsync(process.argv);
