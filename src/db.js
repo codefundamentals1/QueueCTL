@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { isoNow, nowMs } from "./utils.js";
 
+
 // Ensure DB folder exists
 const DB_PATH = process.env.DB_PATH || "./db/queue.db";
 const ensureDir = (p) => {
@@ -90,6 +91,9 @@ export function insertJob({ id, command, max_retries, backoff_base }) {
   });
 }
 
+
+
+
 // Atomically claim the next pending job for a worker
 export const claimNext = (workerId) => {
   // console.log("checking for the next job")
@@ -116,7 +120,7 @@ export const claimNext = (workerId) => {
       WHERE id=?
     `
     ).run(workerId, isoNow(), job.id);
-    console.log("handling by worker: ", workerId)
+    console.log(`job started ${job.id} is handling by worker:  ${workerId}`)
     return job;
   });
 
@@ -125,7 +129,8 @@ export const claimNext = (workerId) => {
 
 // Complete a job
 export function completeJob(id, output, exitCode) {
-  db.prepare(
+  console.log("job completed mesg from db " , id)
+   db.prepare(
     `UPDATE jobs
      SET state='completed', output=?, last_exit_code=?, locked_by=NULL, updated_at=?
      WHERE id=?`
@@ -186,7 +191,7 @@ export const listCounts = () => {
   return counts;
 };
 
-export const listJobsByState = (state, limit = 50) =>
+export const listJobsByState = (state, limit = 1000) =>
   db
     .prepare(
       "SELECT * FROM jobs WHERE state=? ORDER BY updated_at DESC LIMIT ?"
@@ -205,7 +210,7 @@ export const dlqList = (limit = 50) =>
 
 export const dlqRetry = (id) => {
   const job = getJob(id);
-  if (!job || job.state !== "dead") throw new Error("Job not in DLQ");
+  // if (!job || job.state !== "dead") throw new Error("Job not in DLQ");
   db.prepare(
     `UPDATE jobs
      SET state='pending', attempts=0, locked_by=NULL, last_error=NULL, run_at=?, updated_at=?

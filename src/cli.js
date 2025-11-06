@@ -92,6 +92,7 @@ program
     console.log(JSON.stringify(listCounts(), null, 2));
   });
 
+
 //
 // LIST
 //
@@ -173,5 +174,20 @@ program
     }
     console.log(JSON.stringify(job, null, 2));
   });
+//recover
+  program
+  .command("recover")
+  .description("Recover stuck jobs from dead workers (manual run)")
+  .option("--max-age <ms>", "How old a worker heartbeat must be (ms)", "15000")
+  .action((opts) => {
+    const maxAge = Number(opts.maxAge || 15000);
+    const recovered = recoverStuckJobs(maxAge);
+    if (recovered > 0) {
+      console.log(`🩺 Recovered ${recovered} stuck job(s) from dead workers.`);
+    } else {
+      console.log("✅ No stuck jobs found — all workers healthy!");
+    }
+  });
+
 
 await program.parseAsync(process.argv);
