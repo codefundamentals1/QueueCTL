@@ -3,6 +3,11 @@
 > A robust, CLI-driven background job queue built in **Node.js** using **SQLite** for persistence.
 > Supports **multi-worker execution**, **automatic retries with exponential backoff**, **Dead Letter Queue (DLQ)**, and **crash recovery with audit logging**.
 
+## Working demo 
+---
+[Link_to_google_drive](https://drive.google.com/drive/u/2/folders/1_wPL1NPiJ4_NmTCbAmicHQQt9-QGKkxM)
+
+---
 ---
 
 ##  Tech Stack

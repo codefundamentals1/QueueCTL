@@ -110,7 +110,7 @@ export const claimNext = (workerId) => {
       // console.log("Job not found");
       return null;
     }
-
+      
     db.prepare(
       `
       UPDATE jobs
